@@ -1,0 +1,1 @@
+export type TypeModal = "create" | "update" | "delete";

@@ -1,0 +1,48 @@
+version: "3.3"
+
+services:
+
+  server:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db/moviescat
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 2002
+    depends_on:
+      - db
+    ports:
+    - "8080:8080"
+
+  db:
+    restart: always
+    image: postgres:15.2
+    environment:
+      POSTGRES_DB: moviescat
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 2002
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+    -  db-data:/var/lib/postgresql/data
+    ports:
+    - "2002:2002"
+  flyway:
+    image: flyway/flyway
+    container_name: dbflyway
+    command: -configFiles=/flyway/conf/flyway.config -connectRetries=60 migrate
+    volumes:
+    - ./src/main/resources/db/migration:/flyway/sql
+    - ./docker-flyway.properties:/flyway/conf/flyway.config
+    restart: on-failure
+    depends_on:
+      - db
+
+  client:
+    image: klukv/moviescat-client:latest
+    container_name: frontend
+    ports:
+    - "3000:3000"
+volumes:
+  db-data:
