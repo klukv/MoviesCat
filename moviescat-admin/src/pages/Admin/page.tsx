@@ -1,12 +1,20 @@
-import React, { useState } from "react";
+import React, { createContext, useState } from "react";
 import { ModalCreate, ModalDelete, ModalUpdate } from "../../components/modal";
-import { TypeModal } from "../../types/global";
+import { IModalContext, TypeModal } from "../../types/global";
 import "./styles.css";
+import { IMovie } from "../../types/movie";
+
+export const ModalObjectInfoContext = createContext<IModalContext>({
+  objectData: null,
+  setObjectData: () => "",
+});
 
 const AdminPage: React.FC = () => {
   const [isOpenModalCreate, setIsOpenModalCreate] = useState(false);
   const [isOpenModalUpdate, setIsOpenModalUpdate] = useState(false);
   const [isOpenModalDelete, setIsOpenModalDelete] = useState(false);
+
+  const [objectData, setObjectData] = React.useState<IMovie | null>(null);
 
   const changeStateModal = (type: TypeModal, state: true | false) => {
     switch (type) {
@@ -52,18 +60,20 @@ const AdminPage: React.FC = () => {
           </ul>
         </div>
       </div>
-      <ModalCreate
-        isOpen={isOpenModalCreate}
-        closeModal={() => changeStateModal("create", false)}
-      />
-      <ModalUpdate
-        isOpen={isOpenModalUpdate}
-        closeModal={() => changeStateModal("update", false)}
-      />
-      <ModalDelete
-        isOpen={isOpenModalDelete}
-        closeModal={() => changeStateModal("delete", false)}
-      />
+      <ModalObjectInfoContext.Provider value={{ objectData, setObjectData }}>
+        <ModalCreate
+          isOpen={isOpenModalCreate}
+          closeModal={() => changeStateModal("create", false)}
+        />
+        <ModalUpdate
+          isOpen={isOpenModalUpdate}
+          closeModal={() => changeStateModal("update", false)}
+        />
+        <ModalDelete
+          isOpen={isOpenModalDelete}
+          closeModal={() => changeStateModal("delete", false)}
+        />
+      </ModalObjectInfoContext.Provider>
     </>
   );
 };

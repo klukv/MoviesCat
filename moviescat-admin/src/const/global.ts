@@ -7,3 +7,5 @@ export const stateDropdown = {
     { name: "триллер", id: 4 },
   ],
 };
+
+export const API_URL = "http://localhost:8081";

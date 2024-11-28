@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import ModalWrapper from "../ModalWrapper/ModalWrapper";
 import { IDropdownSelectItem } from "../../../types/admin";
 import { stateDropdown } from "../../../const/global";
 import Multiselect from "multiselect-react-dropdown";
+import { IMovie } from "../../../types/movie";
+import { ModalObjectInfoContext } from "../../../pages/Admin/page";
 
 interface IProps {
   isOpen: boolean;
@@ -10,19 +12,28 @@ interface IProps {
 }
 
 const ModalCreate: React.FC<IProps> = ({ isOpen, closeModal }) => {
-  const [selectedGenres, setSelectedGenres] =
-    React.useState<string>("не вышел");
+  const modalContext = useContext(ModalObjectInfoContext);
 
   const onSelect = (selectedList: IDropdownSelectItem[]) => {
     const ListToString = selectedList.map((genre) => genre.name).join(",");
-    setSelectedGenres(ListToString);
+    handleChangeField("genre", ListToString);
+  };
+
+  const handleChangeField = (name: string, value: number | string) => {
+    modalContext.setObjectData({ ...modalContext.objectData, [name]: value } as IMovie);
   };
 
   return (
     <ModalWrapper type="create" isOpen={isOpen} closeModal={closeModal}>
       <div className="modal-group">
         <label className="modal-label">Название фильма</label>
-        <input name="title" type="text" className="modal-input" required />
+        <input
+          name="title"
+          type="text"
+          className="modal-input"
+          required
+          onChange={(e) => handleChangeField("title", e.target.value)}
+        />
       </div>
       <div className="modal-group">
         <label className="modal-label">Описание фильма</label>
@@ -31,15 +42,28 @@ const ModalCreate: React.FC<IProps> = ({ isOpen, closeModal }) => {
           type="text"
           className="modal-input"
           required
+          onChange={(e) => handleChangeField("description", e.target.value)}
         />
       </div>
       <div className="modal-group">
         <label className="modal-label">Год создания</label>
-        <input name="year" type="text" className="modal-input" required />
+        <input
+          name="year"
+          type="text"
+          className="modal-input"
+          required
+          onChange={(e) => handleChangeField("year", e.target.value)}
+        />
       </div>
       <div className="modal-group">
         <label className="modal-label">Страна</label>
-        <input name="country" type="text" className="modal-input" required />
+        <input
+          name="country"
+          type="text"
+          className="modal-input"
+          required
+          onChange={(e) => handleChangeField("country", e.target.value)}
+        />
       </div>
       <div className="modal-group">
         <label className="modal-label">Жанр</label>
@@ -52,23 +76,51 @@ const ModalCreate: React.FC<IProps> = ({ isOpen, closeModal }) => {
       </div>
       <div className="modal-group">
         <label className="modal-label">Режиссёр</label>
-        <input name="director" type="text" className="modal-input" required />
+        <input
+          name="director"
+          type="text"
+          className="modal-input"
+          required
+          onChange={(e) => handleChangeField("director", e.target.value)}
+        />
       </div>
       <div className="modal-group">
         <label className="modal-label">Время</label>
-        <input name="time" type="text" className="modal-input" required />
+        <input
+          name="time"
+          type="text"
+          className="modal-input"
+          required
+          onChange={(e) => handleChangeField("time", e.target.value)}
+        />
       </div>
       <div className="modal-group">
         <label className="modal-label">Бюджет</label>
-        <input name="budget" type="text" className="modal-input" required />
+        <input
+          name="budget"
+          type="text"
+          className="modal-input"
+          required
+          onChange={(e) => handleChangeField("budget", e.target.value)}
+        />
       </div>
       <div className="modal-group">
         <label className="modal-label">Ссылка на постер</label>
-        <input name="imgUrl" type="text" className="modal-input" required />
+        <input
+          name="imgUrl"
+          type="text"
+          className="modal-input"
+          required
+          onChange={(e) => handleChangeField("imgUrl", e.target.value)}
+        />
       </div>
       <div className="modal-group">
         <label className="modal-label">Тип</label>
-        <select name="type" className="modal-input" required>
+        <select
+          name="type"
+          className="modal-input"
+          required
+          onChange={(e) => handleChangeField("type", e.target.value)}>
           <option value="default" disabled>
             Тип
           </option>

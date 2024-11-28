@@ -82,3 +82,7 @@
   -webkit-transition: 0.2s ease all;
 }
 
+.response_message {
+  font-size: 25px;
+}
+
