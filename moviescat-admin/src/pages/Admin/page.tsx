@@ -1,20 +1,29 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { ModalCreate, ModalDelete, ModalUpdate } from "../../components/modal";
-import { IModalContext, TypeModal } from "../../types/global";
+import {
+  IModalContext,
+  ModalContextTypes,
+  MovieEditOptions,
+  TypeModal,
+} from "../../types/global";
 import "./styles.css";
-import { IMovie } from "../../types/movie";
+import { IMovie, IMovieWithoutId } from "../../types/movie";
+import { fetchAllMovies } from "../../services/movieService";
 
-export const ModalObjectInfoContext = createContext<IModalContext>({
-  objectData: null,
-  setObjectData: () => "",
-});
+export const ModalObjectInfoContext = createContext<IModalContext | null>(null);
 
 const AdminPage: React.FC = () => {
   const [isOpenModalCreate, setIsOpenModalCreate] = useState(false);
   const [isOpenModalUpdate, setIsOpenModalUpdate] = useState(false);
   const [isOpenModalDelete, setIsOpenModalDelete] = useState(false);
 
-  const [objectData, setObjectData] = React.useState<IMovie | null>(null);
+  const [objectData, setObjectData] = React.useState<IMovieWithoutId | null>(
+    null
+  );
+  const [movieEditOption, setMovieEditOption] =
+    useState<MovieEditOptions | null>(null);
+  const [selectRemovingId, setSelectRemovingId] = useState<number | null>(null);
+  const [movies, setMovies] = useState<IMovie[]>([]);
 
   const changeStateModal = (type: TypeModal, state: true | false) => {
     switch (type) {
@@ -29,6 +38,11 @@ const AdminPage: React.FC = () => {
         break;
     }
   };
+
+  useEffect(() => {
+    if (movies.length === 0)
+      fetchAllMovies().then((res) => setMovies(res));
+  }, []);
 
   return (
     <>
@@ -60,16 +74,33 @@ const AdminPage: React.FC = () => {
           </ul>
         </div>
       </div>
-      <ModalObjectInfoContext.Provider value={{ objectData, setObjectData }}>
+      <ModalObjectInfoContext.Provider
+        value={{ type: ModalContextTypes.CREATE, objectData, setObjectData }}>
         <ModalCreate
           isOpen={isOpenModalCreate}
           closeModal={() => changeStateModal("create", false)}
         />
+      </ModalObjectInfoContext.Provider>
+      <ModalObjectInfoContext.Provider
+        value={{
+          type: ModalContextTypes.EDIT,
+          movieEditOption,
+          setMovieEditOption,
+        }}>
         <ModalUpdate
           isOpen={isOpenModalUpdate}
           closeModal={() => changeStateModal("update", false)}
+          movies={movies}
         />
+      </ModalObjectInfoContext.Provider>
+      <ModalObjectInfoContext.Provider
+        value={{
+          type: ModalContextTypes.DELETE,
+          selectRemovingId,
+          setSelectRemovingId,
+        }}>
         <ModalDelete
+          movies={movies}
           isOpen={isOpenModalDelete}
           closeModal={() => changeStateModal("delete", false)}
         />

@@ -3,8 +3,9 @@ import ModalWrapper from "../ModalWrapper/ModalWrapper";
 import { IDropdownSelectItem } from "../../../types/admin";
 import { stateDropdown } from "../../../const/global";
 import Multiselect from "multiselect-react-dropdown";
-import { IMovie } from "../../../types/movie";
 import { ModalObjectInfoContext } from "../../../pages/Admin/page";
+import { ModalContextTypes } from "../../../types/global";
+import { IMovieWithoutId } from "../../../types/movie";
 
 interface IProps {
   isOpen: boolean;
@@ -20,7 +21,11 @@ const ModalCreate: React.FC<IProps> = ({ isOpen, closeModal }) => {
   };
 
   const handleChangeField = (name: string, value: number | string) => {
-    modalContext.setObjectData({ ...modalContext.objectData, [name]: value } as IMovie);
+    if (modalContext?.type === ModalContextTypes.CREATE)
+      modalContext.setObjectData({
+        ...modalContext.objectData,
+        [name]: value,
+      } as IMovieWithoutId);
   };
 
   return (

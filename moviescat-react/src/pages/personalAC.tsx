@@ -24,6 +24,7 @@ type TActiveList = {
   activeMovies: boolean;
   activeSerials: boolean;
 };
+
 type TpropsRVideos = {
   allRecentlyVideos: allVideos[]
 }
@@ -447,7 +448,6 @@ const PersonalAC: React.FC = () => {
             </div>
           </div>
         </div>
-
         <div className="modal-group btn-modal">
           <button type="submit" className=" btn-primary button-modal ">
             <span>Добавить</span>

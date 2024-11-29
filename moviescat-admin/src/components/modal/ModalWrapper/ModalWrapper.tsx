@@ -1,13 +1,19 @@
 import React, { PropsWithChildren, useContext } from "react";
-import { TypeModal } from "../../../types/global";
+import { ModalContextTypes, TypeModal } from "../../../types/global";
 import "./styles.css";
-import { createMovie } from "../../../services/movieService";
+import {
+  createMovie,
+  deleteMovie,
+  editMovie,
+} from "../../../services/movieService";
 import { ModalObjectInfoContext } from "../../../pages/Admin/page";
+import { IMovie } from "../../../types/movie";
 
 interface IProps {
   type: TypeModal;
   isOpen: boolean;
   closeModal: () => void;
+  movies?: IMovie[];
 }
 
 const ModalWrapper: React.FC<PropsWithChildren<IProps>> = ({
@@ -15,6 +21,7 @@ const ModalWrapper: React.FC<PropsWithChildren<IProps>> = ({
   type,
   isOpen,
   closeModal,
+  movies
 }) => {
   const [message, setMessage] = React.useState<string | null>(null);
 
@@ -31,15 +38,42 @@ const ModalWrapper: React.FC<PropsWithChildren<IProps>> = ({
 
   const modalContext = useContext(ModalObjectInfoContext);
 
+  const handleResponse = (message: string) => {
+    setMessage(message);
+    setTimeout(() => {
+      setMessage(null);
+      closeModal();
+    }, 2000);
+  };
+
   const handleFetchingData = async () => {
-    const data = await createMovie(modalContext.objectData);
-    if (data) {
-      setMessage(data.message)
-      setTimeout(() => {
-        setMessage(null);
-        closeModal();
-      }, 2000)
-    };
+    switch (modalContext?.type) {
+      case ModalContextTypes.CREATE: {
+          const data = await createMovie(modalContext.objectData);
+          if (data) handleResponse(data.message);
+        }
+        break;
+      case ModalContextTypes.EDIT: {
+          const selectMovie = movies!.find(
+            (movie) =>
+              movie.id === modalContext.movieEditOption!.movieId
+          );
+          const newMovie = {
+            ...selectMovie!,
+            [modalContext.movieEditOption!.changingField]:
+              modalContext.movieEditOption!.value,
+          };
+
+          const data = await editMovie(newMovie);
+          if (data) handleResponse(data.message);
+        }
+        break;
+      case ModalContextTypes.DELETE: {
+          const data = await deleteMovie(modalContext.selectRemovingId);
+          if (data) handleResponse(data.message);
+        }
+        break;
+    }
   };
 
   return (

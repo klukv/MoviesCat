@@ -1,4 +1,5 @@
 export interface IMovie {
+  id: number;
   title: string;
   description: string;
   year: number;
@@ -10,6 +11,8 @@ export interface IMovie {
   imgUrl: string;
   type: string;
 }
+
+export type IMovieWithoutId = Omit<IMovie, "id">;
 
 export interface IResponseCreatingMovie {
   message: string;
