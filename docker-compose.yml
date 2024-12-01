@@ -1,20 +1,71 @@
 version: "3.3"
 
 services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+    networks:
+      - app_network
 
-  server:
-    container_name: backend
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - 9092:9092
+    networks:
+      - app_network
+
+  server_main:
+    container_name: backend-main
     build:
-      context: .
+      context: ./movies-react-backend
       dockerfile: Dockerfile
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db/moviescat
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 2002
+      BOOTSTRAP-SERVERS: kafka:9092
+      CONSUMER-GROUP-ID: movies-consumer-group
     depends_on:
       - db
+      - kafka
     ports:
-    - "8080:8080"
+    - 8080:8080
+    networks:
+      - app_network
+
+  server_admin:
+    container_name: backend-admin
+    build:
+      context: ./movies-admin-backend
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db/moviescat
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 2002
+      BOOTSTRAP-SERVERS: kafka:9092
+    depends_on:
+      - db
+      - kafka
+    ports:
+    - 8081:8081
+    networks:
+      - app_network
 
   db:
     restart: always
@@ -27,22 +78,50 @@ services:
     volumes:
     -  db-data:/var/lib/postgresql/data
     ports:
-    - "2002:2002"
+    - 5432:5432
+    networks:
+      - app_network
+
   flyway:
     image: flyway/flyway
     container_name: dbflyway
     command: -configFiles=/flyway/conf/flyway.config -connectRetries=60 migrate
     volumes:
-    - ./src/main/resources/db/migration:/flyway/sql
-    - ./docker-flyway.properties:/flyway/conf/flyway.config
+    - ./movies-react-backend/src/main/resources/db/migration:/flyway/sql
+    - ./movies-react-backend/docker-flyway.properties:/flyway/conf/flyway.config
     restart: on-failure
     depends_on:
-      - db
+      - db 
+    networks:
+      - app_network
 
-  client:
+  client_main:
     image: klukv/moviescat-client:latest
-    container_name: frontend
+    container_name: frontend-main
+    depends_on:
+      - server_main
     ports:
-    - "3000:3000"
+    - 3000:3000
+    networks:
+      - app_network
+
+  client_admin:
+    container_name: frontend-admin
+    build:
+      context: ./moviescat-admin
+      dockerfile: Dockerfile
+    depends_on:
+      - server_admin
+    environment:
+      - PORT=3001
+    ports:
+    - 3001:3001
+    networks:
+      - app_network
+
 volumes:
   db-data:
+
+networks:
+  app_network:
+    driver: bridge
