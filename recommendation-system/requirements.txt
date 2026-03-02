@@ -3,3 +3,10 @@ pandas
 scipy
 tqdm
 implicit==0.7.2
+
+# --- Recommendation Service (REST API) ---
+fastapi
+uvicorn[standard]
+redis>=5.0.0
+pydantic
+pydantic-settings
