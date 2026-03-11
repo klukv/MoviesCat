@@ -2,8 +2,8 @@ package main.controllers;
 
 import main.models.Serials;
 import main.models.User;
-import main.pojo.AddFavouriteRequest;
-import main.pojo.MessageResponse;
+import main.dto.AddFavouriteRequest;
+import main.dto.MessageResponse;
 import main.repositories.SerialsRepository;
 import main.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;

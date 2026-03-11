@@ -1,12 +1,15 @@
 package main.controllers;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import main.dto.MovieDTO;
 import main.models.Movies;
 import main.models.User;
-import main.pojo.AddFavouriteRequest;
-import main.pojo.MessageResponse;
+import main.dto.AddFavouriteRequest;
+import main.dto.MessageResponse;
 import main.repositories.MoviesRepository;
 import main.repositories.UserRepository;
+import main.service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -14,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,12 +29,15 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("api/user")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequiredArgsConstructor
 public class MoviesControllers {
 
     @Autowired
     MoviesRepository moviesRepository;
     @Autowired
     UserRepository userRepository;
+
+    private final MovieService movieService;
 
     private Sort.Direction getSortDirection(String direction){
         if(direction.equals("asc")){
@@ -159,4 +167,22 @@ public class MoviesControllers {
         }
     }
 
+    @GetMapping("users/{userId}/recommendations")
+    public ResponseEntity<List<MovieDTO>> getRecommendations(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "20")
+            @Min(value = 1)
+            @Max(value = 100)
+            int limit,
+            @RequestParam(defaultValue = "homepage")
+            String context,
+            @RequestParam(required = false)
+            String genre,
+             @RequestParam(required = true)
+            boolean excludeWatched
+    ) {
+        List<MovieDTO> movies = movieService.getRecommendedMovies(userId, limit, context, genre, excludeWatched);
+
+        return ResponseEntity.ok(movies);
+    }
 }

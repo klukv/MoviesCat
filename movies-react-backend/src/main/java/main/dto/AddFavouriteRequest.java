@@ -1,4 +1,4 @@
-package main.pojo;
+package main.dto;
 
 import lombok.Getter;
 import lombok.Setter;
