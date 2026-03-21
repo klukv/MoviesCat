@@ -43,7 +43,7 @@ public class MovieService {
                 .map(MovieScore::getMovieId)
                 .collect(Collectors.toList());
 
-        List<MovieDTO> movies = moviesRepository.findAllById(movieIds)
+        List<MovieDTO> movies = moviesRepository.findAllByIdIn(movieIds)
                 .stream()
                 .map(entity -> MovieDTO.builder()
                         .id(entity.getId())

@@ -12,5 +12,5 @@ public interface MoviesRepository extends JpaRepository<Movies, Long> {
     Boolean existsByTitle(String title);
     List<Movies> findByTitleContaining(String title, Sort sort);
     List<Movies> findByType(String type);
-    List<Movies> findAllById(List<Long> ids);
+    List<Movies> findAllByIdIn(List<Long> ids);
 }

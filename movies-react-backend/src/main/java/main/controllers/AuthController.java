@@ -68,7 +68,7 @@ public class AuthController {
 
     }
     @PostMapping("/registration")
-    public ResponseEntity<?> registerUser(@RequestBody SignupRequest registerReq){
+    public ResponseEntity<?> registerUser(@RequestBody SignupRequest registerReq) {
 
         if (userRepository.existsByUsername(registerReq.getUsername())) {
             return ResponseEntity

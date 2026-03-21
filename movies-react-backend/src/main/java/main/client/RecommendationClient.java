@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -34,7 +33,7 @@ public class RecommendationClient {
             boolean excludeWatched
     ) {
         String url = UriComponentsBuilder
-                .fromHttpUrl(baseUrl + "/recommendations" + userId)
+                .fromHttpUrl(baseUrl + "/recommendations" + "/" + userId)
                 .queryParam("limit", limit)
                 .queryParam("context", context)
                 .queryParam("exclude_watched", excludeWatched)
