@@ -13,9 +13,9 @@ public class MovieDTO {
     private String country;
     private String genre;
     private String director;
-    private Integer time;
+    private Float time;
     private Integer budget;
     private String imgUrl;
     private String type;
-    private double score; // score из рекомендаций, обогащённый данными из БД
+    private Double score; // score из рекомендаций, обогащённый данными из БД
 }

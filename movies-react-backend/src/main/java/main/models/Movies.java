@@ -23,10 +23,11 @@ public class Movies {
     private String country;
     private String genre;
     private String director;
-    private Integer time;
+    private Float time;
     private Integer budget;
     private String imgUrl;
     private String type;
+    private Float rating;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_fmovies", joinColumns = @JoinColumn(name = "movie_id"),
     inverseJoinColumns = @JoinColumn(name = "user_id"))
@@ -36,7 +37,7 @@ public class Movies {
     public Movies() {
     }
 
-    public Movies(String title, String description, Integer year, String country, String genre, String director, Integer time, Integer budget, String imgUrl, String type) {
+    public Movies(String title, String description, Integer year, String country, String genre, String director, Float time, Integer budget, String imgUrl, String type, Float rating) {
         super();
         this.title = title;
         this.description = description;
@@ -48,5 +49,6 @@ public class Movies {
         this.budget = budget;
         this.imgUrl = imgUrl;
         this.type = type;
+        this.rating = rating;
     }
 }

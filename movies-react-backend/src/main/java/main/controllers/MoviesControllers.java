@@ -9,7 +9,7 @@ import main.dto.AddFavouriteRequest;
 import main.dto.MessageResponse;
 import main.repositories.MoviesRepository;
 import main.repositories.UserRepository;
-import main.service.MovieService;
+import main.service.movie.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
