@@ -9,9 +9,11 @@ def build_encoders(implicit_df: pd.DataFrame) -> tuple[dict, dict, dict, dict]:
     """
     Строит энкодеры user_id/item_id ↔ matrix indices.
     Возвращает (user_enc, item_enc, user_dec, item_dec).
+
+    Ключи user_enc / item_enc — str (совместимость с JSON/API и сущностью Movies.id).
     """
-    users = implicit_df["user_id"].unique()
-    items = implicit_df["item_id"].unique()
+    users = implicit_df["user_id"].astype(str).unique().tolist()
+    items = implicit_df["item_id"].astype(str).unique().tolist()
 
     user_enc = {u: i for i, u in enumerate(users)}
     item_enc = {it: i for i, it in enumerate(items)}
@@ -27,8 +29,8 @@ def build_csr_matrix(
     item_enc: dict,
 ) -> csr_matrix:
     """Строит CSR-матрицу user_items[u, i] = weight взаимодействия."""
-    rows = implicit_df["user_id"].map(user_enc).values
-    cols = implicit_df["item_id"].map(item_enc).values
+    rows = implicit_df["user_id"].astype(str).map(user_enc).values
+    cols = implicit_df["item_id"].astype(str).map(item_enc).values
     data = implicit_df["weight"].values.astype(np.float32)
 
     user_items = csr_matrix(
@@ -46,11 +48,16 @@ def build_csr_from_pairs(
     user_enc: dict,
     item_enc: dict,
 ) -> csr_matrix:
-    """Строит CSR из DataFrame с колонками user_id, item_id."""
-    valid = df[df["user_id"].isin(user_enc) & df["item_id"].isin(item_enc)]
-    r = valid["user_id"].map(user_enc).values
-    c = valid["item_id"].map(item_enc).values
-    d = np.ones(len(valid), dtype=np.float32)
+    """Строит CSR из DataFrame с колонками user_id, item_id; опционально weight."""
+    u_col = df["user_id"].astype(str)
+    i_col = df["item_id"].astype(str)
+    mask = u_col.isin(user_enc) & i_col.isin(item_enc)
+    r = u_col.loc[mask].map(user_enc).values
+    c = i_col.loc[mask].map(item_enc).values
+    if "weight" in df.columns:
+        d = df.loc[mask, "weight"].values.astype(np.float32)
+    else:
+        d = np.ones(int(mask.sum()), dtype=np.float32)
     return csr_matrix(
         (d, (r, c)),
         shape=(len(user_enc), len(item_enc)),

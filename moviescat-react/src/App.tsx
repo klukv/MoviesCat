@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { Routes, Route } from "react-router-dom";
@@ -43,6 +43,10 @@ const App: React.FC = () => {
   const logOut = useCallback(() => {
     dispatch(logoutUser());
   }, [dispatch]);
+
+  useEffect(() => {
+    console.log(isAuthUser);
+  }, [isAuthUser])
 
   return (
     <div className="page">

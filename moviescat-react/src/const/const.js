@@ -10,7 +10,7 @@ export const likeMovies = "/person/like-movies";
 export const likeSerials = "/person/like-serials";
 export const API_URL = "http://localhost:8080";
 export const API_URL_AUTH = "/api/auth";
-export const API_URL_CONTENT = "/api/user";
+export const API_URL_CONTENT = "/api";
 
 export const sortItemsGenre = [
   { genre: "Все", type: "default", order: "asc" },

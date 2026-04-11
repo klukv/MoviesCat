@@ -1,13 +1,5 @@
-"""Модуль загрузки данных."""
+"""Загрузка данных для обучения (выгрузка каталога + взаимодействий)."""
 
-from .config import DATA_DIR, ML1M_URL, THRESHOLD
-from .loaders import download_movielens, load_movies, load_ratings
+from .db_loaders import load_training_payload
 
-__all__ = [
-    "DATA_DIR",
-    "ML1M_URL",
-    "THRESHOLD",
-    "download_movielens",
-    "load_movies",
-    "load_ratings",
-]
+__all__ = ["load_training_payload"]

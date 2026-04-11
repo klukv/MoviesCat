@@ -1,8 +1,12 @@
 """Рекомендации для конкретного пользователя."""
 
+from __future__ import annotations
+
 import pandas as pd
 from implicit.als import AlternatingLeastSquares
 from scipy.sparse import csr_matrix
+
+from ml_model.prototype.preprocessing.id_keys import resolve_encoder_key
 
 
 def get_recommendations(
@@ -11,7 +15,7 @@ def get_recommendations(
     user_enc: dict,
     item_dec: dict,
     movies: pd.DataFrame,
-    original_user_id: int,
+    original_user_id: str | int,
     n: int = 10,
     verbose: bool = True,
 ) -> pd.DataFrame:
@@ -19,11 +23,12 @@ def get_recommendations(
     Возвращает топ-N рекомендаций для пользователя.
     Уже просмотренные фильмы исключены (filter_already_liked_items=True).
     """
-    if original_user_id not in user_enc:
+    user_key = resolve_encoder_key(original_user_id, user_enc)
+    if user_key is None:
         print(f"! Пользователь {original_user_id} не найден в матрице.")
         return pd.DataFrame()
 
-    uid = user_enc[original_user_id]
+    uid = user_enc[user_key]
     item_ids, scores = model.recommend(
         uid,
         train_csr[uid],
@@ -38,6 +43,7 @@ def get_recommendations(
 
     if verbose:
         print(f"\nТоп-{n} рекомендаций для пользователя {original_user_id}:")
-        print(recs[["item_id", "title", "genres", "score"]].to_string(index=False))
+        cols = [c for c in ("item_id", "title", "genre", "genres", "score") if c in recs.columns]
+        print(recs[cols].to_string(index=False))
 
     return recs

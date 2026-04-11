@@ -1,17 +1,16 @@
-"""Модуль предобработки данных."""
+"""Предобработка: энкодеры, матрица взаимодействий, split по времени."""
 
 from .encoders import (
     build_csr_from_pairs,
     build_csr_matrix,
     build_encoders,
 )
-from .implicit import to_implicit
-from .split import leave_last_out_split
+from .interactions_split import interactions_to_implicit, leave_last_out_interactions
 
 __all__ = [
     "build_csr_from_pairs",
     "build_csr_matrix",
     "build_encoders",
-    "leave_last_out_split",
-    "to_implicit",
+    "interactions_to_implicit",
+    "leave_last_out_interactions",
 ]

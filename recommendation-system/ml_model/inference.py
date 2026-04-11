@@ -4,9 +4,8 @@
 Задача: не переписывать текущий ML-прототип, а аккуратно "обернуть" его,
 чтобы микросервис вызывал единый интерфейс `predict(...)`.
 
-Сейчас прототип:
-- обучает ALS (implicit) и сохраняет артефакты в pickle (по умолчанию `als_model_artifacts.pkl`)
-- умеет отдавать рекомендации и popularity baseline
+Обучение (отдельный job): ALS (implicit), артефакты в pickle (`als_model_artifacts.pkl`).
+Инференс: персональные рекомендации или popularity baseline для новых пользователей.
 
 В API есть параметры context/genre/exclude_watched — прототип их пока не поддерживает.
 Мы принимаем их, но в этой версии они не влияют на выдачу (явное допущение).
@@ -18,9 +17,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 import random
-import zlib
 
 import pandas as pd
+
+from ml_model.prototype.preprocessing.id_keys import resolve_encoder_key
 
 
 DEFAULT_ARTIFACTS_PATH = Path("als_model_artifacts.pkl")
@@ -30,14 +30,6 @@ DEFAULT_ARTIFACTS_PATH = Path("als_model_artifacts.pkl")
 class RecommendationItem:
     movie_id: str
     score: float
-
-
-def _stable_user_int(user_id: str) -> int:
-    # Прототип ожидает int user_id (MovieLens). Если приходит строка/UUID — делаем стабильный int.
-    try:
-        return int(user_id)
-    except Exception:
-        return int(zlib.crc32(user_id.encode("utf-8")) & 0x7FFFFFFF)
 
 
 def _stub_recommendations(limit: int) -> list[RecommendationItem]:
@@ -112,9 +104,7 @@ def predict(
 
     from ml_model.prototype.recommendations import get_popularity_baseline, get_recommendations
 
-    uid = _stable_user_int(user_id)
-
-    if uid not in user_enc:
+    if resolve_encoder_key(user_id, user_enc) is None:
         df = get_popularity_baseline(train_csr, item_dec, movies, n=limit, verbose=False)
         items = _df_to_items(df, "popularity")
         return [item.__dict__ for item in items]
@@ -125,7 +115,7 @@ def predict(
         user_enc,
         item_dec,
         movies,
-        uid,
+        user_id,
         n=limit,
         verbose=False,
     )

@@ -2,7 +2,7 @@
 
 Внутри этой папки лежат две части:
 
-- `ml_model/` — **ML-модель** (существующий прототип, упакованный в слой) + стабильный интерфейс инференса `ml_model.predict(...)`.
+- `ml_model/` — **ML-модель** (обучение на JSON-выгрузке каталога + взаимодействий) + инференс `ml_model.predict(...)`.
 - `recommendation_system/` — **Recommendation Service** (FastAPI): REST API, Redis-кэш, feedback + Kafka-заглушка.
 
 ## Быстрый старт
@@ -29,13 +29,15 @@ uvicorn recommendation_system.app.main:app --host 0.0.0.0 --port 8000 --reload
 
 Swagger UI: `http://localhost:8000/docs`
 
-### Запуск ML-прототипа (обучение/оценка/сохранение артефактов)
+### Обучение модели (JSON как с бекенда)
 
-Прототип перенесён в `ml_model/prototype/`. Чтобы запустить его так же, как раньше:
+Формат файла: `movies` + `interactions` (см. `ml_model/prototype/data/db_loaders.py`).  
+Офлайн-пример без БД:
 
 ```bash
-python -m ml_model.run_prototype
+python scripts/generate_training_fixture.py
+python -m ml_model.train_from_payload -i ml_model/fixtures/training_sample_1k.json -o als_model_artifacts.pkl
 ```
 
-Артефакты по умолчанию сохраняются в `als_model_artifacts.pkl` в корне `recommendation-system/`.
+Артефакт `als_model_artifacts.pkl` кладите туда, откуда запускаете сервис (по умолчанию — корень `recommendation-system/`).
 

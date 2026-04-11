@@ -4,8 +4,8 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { saveUser, setIsAuth } from "../redux/slices/user";
 import { signin } from "../services/userService";
-import "../scss/loginORsignup.scss";
 import { signup } from "../const/const";
+import "../scss/loginORsignup.scss";
 
 interface State {
   username: string;
@@ -53,7 +53,6 @@ const Login: React.FC = () => {
           dispatch(setIsAuth(true));
         }
         navigate("/");
-        window.location.reload();
       },
       ({response}) => {
         const resMessage =

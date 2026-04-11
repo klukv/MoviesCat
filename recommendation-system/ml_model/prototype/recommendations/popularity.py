@@ -27,5 +27,10 @@ def get_popularity_baseline(
 
     if verbose:
         print(f"\nPopularity Baseline — топ-{n} фильмов:")
-        print(df[["item_id", "title", "genres", "popularity"]].to_string(index=False))
+        cols = [
+            c
+            for c in ("item_id", "title", "genre", "genres", "popularity")
+            if c in df.columns
+        ]
+        print(df[cols].to_string(index=False))
     return df

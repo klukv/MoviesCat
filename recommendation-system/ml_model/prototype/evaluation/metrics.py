@@ -108,6 +108,16 @@ def compute_metrics(
         aps.append(_ap_at_k_user(recommended, relevant, k))
         hits.append(1.0 if n_hits > 0 else 0.0)
 
+    if not precisions:
+        return {
+            "precision": 0.0,
+            "recall": 0.0,
+            "ndcg": 0.0,
+            "map": 0.0,
+            "hit_rate": 0.0,
+            "n_users": 0,
+        }
+
     return {
         "precision": float(np.mean(precisions)),
         "recall": float(np.mean(recalls)),

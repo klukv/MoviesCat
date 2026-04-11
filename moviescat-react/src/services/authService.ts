@@ -11,10 +11,11 @@ const $authHost = axios.create({
   baseURL: API_URL
 })
 
-const authInterceptor = (config:AxiosRequestConfig) => {
-  if(config.headers){
-    config.headers.authorization = `Bearer ${token}`;
-  }
+const authInterceptor = (config: AxiosRequestConfig) => {
+  if (!config.headers) return config;
+
+  config.headers["Authorization"] = `Bearer ${token}`;
+
   return config;
 }
 
