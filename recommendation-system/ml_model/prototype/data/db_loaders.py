@@ -85,6 +85,62 @@ def _interaction_row_to_record(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def parse_movies_list(movies_raw: list[dict[str, Any]]) -> pd.DataFrame:
+    if not movies_raw:
+        raise ValueError("Список movies пуст — без каталога обучать ALS некорректно.")
+
+    movies_records = [_movie_row_to_record(m) for m in movies_raw]
+    movies_df = pd.DataFrame(movies_records)
+    movies_df["item_id"] = movies_df["item_id"].astype(str)
+    return movies_df
+
+
+def parse_interactions_list(inter_raw: list[dict[str, Any]]) -> pd.DataFrame:
+    if not inter_raw:
+        raise ValueError("Список interactions пуст — нет неявных сигналов для обучения.")
+
+    inter_records = [_interaction_row_to_record(x) for x in inter_raw]
+    interactions_df = pd.DataFrame(inter_records)
+    interactions_df["user_id"] = interactions_df["user_id"].astype(str)
+    interactions_df["item_id"] = interactions_df["item_id"].astype(str)
+    interactions_df["weight"] = interactions_df["weight"].astype(np.float32)
+    interactions_df["timestamp"] = interactions_df["timestamp"].astype(np.int64)
+    return interactions_df
+
+
+def dataframes_from_payload(
+    movies_raw: list[dict[str, Any]],
+    interactions_raw: list[dict[str, Any]],
+    *,
+    filter_unknown_movies: bool = True,
+    verbose: bool = True,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Собирает DataFrame каталога и взаимодействий из сырых списков (API или JSON).
+    """
+    movies_df = parse_movies_list(movies_raw)
+    interactions_df = parse_interactions_list(interactions_raw)
+
+    if filter_unknown_movies:
+        known = set(movies_df["item_id"].unique())
+        before = len(interactions_df)
+        interactions_df = interactions_df[interactions_df["item_id"].isin(known)].copy()
+        dropped = before - len(interactions_df)
+        if dropped and verbose:
+            print(f"! Отброшено взаимодействий с неизвестным movie_id: {dropped:,}")
+
+    if interactions_df.empty:
+        raise ValueError("После фильтрации по каталогу movies не осталось взаимодействий.")
+
+    if verbose:
+        print(f"Загружено фильмов из каталога : {len(movies_df):,}")
+        print(f"Загружено событий             : {len(interactions_df):,}")
+        print(f"Уникальных пользователей      : {interactions_df['user_id'].nunique():,}")
+        print(f"Уникальных фильмов в событиях : {interactions_df['item_id'].nunique():,}")
+
+    return movies_df, interactions_df
+
+
 def load_training_payload(path: str | Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Читает JSON-файл с каталогом фильмов и событиями взаимодействий.
@@ -103,38 +159,4 @@ def load_training_payload(path: str | Path) -> tuple[pd.DataFrame, pd.DataFrame]
     movies_raw = payload.get("movies") or []
     inter_raw = payload.get("interactions") or []
 
-    if not movies_raw:
-        raise ValueError("Список movies пуст — без каталога обучать ALS некорректно.")
-    if not inter_raw:
-        raise ValueError("Список interactions пуст — нет неявных сигналов для обучения.")
-
-    movies_records = [_movie_row_to_record(m) for m in movies_raw]
-    inter_records = [_interaction_row_to_record(x) for x in inter_raw]
-
-    movies_df = pd.DataFrame(movies_records)
-    interactions_df = pd.DataFrame(inter_records)
-
-    # Типы для стабильных merge / матрицы
-    movies_df["item_id"] = movies_df["item_id"].astype(str)
-    interactions_df["user_id"] = interactions_df["user_id"].astype(str)
-    interactions_df["item_id"] = interactions_df["item_id"].astype(str)
-    interactions_df["weight"] = interactions_df["weight"].astype(np.float32)
-    interactions_df["timestamp"] = interactions_df["timestamp"].astype(np.int64)
-
-    # Фильтруем «битые» ссылки на несуществующие фильмы (как при частичной выгрузке)
-    known = set(movies_df["item_id"].unique())
-    before = len(interactions_df)
-    interactions_df = interactions_df[interactions_df["item_id"].isin(known)].copy()
-    dropped = before - len(interactions_df)
-    if dropped:
-        print(f"! Отброшено взаимодействий с неизвестным movie_id: {dropped:,}")
-
-    if interactions_df.empty:
-        raise ValueError("После фильтрации по каталогу movies не осталось взаимодействий.")
-
-    print(f"Загружено фильмов из каталога : {len(movies_df):,}")
-    print(f"Загружено событий             : {len(interactions_df):,}")
-    print(f"Уникальных пользователей      : {interactions_df['user_id'].nunique():,}")
-    print(f"Уникальных фильмов в событиях : {interactions_df['item_id'].nunique():,}")
-
-    return movies_df, interactions_df
+    return dataframes_from_payload(movies_raw, inter_raw)

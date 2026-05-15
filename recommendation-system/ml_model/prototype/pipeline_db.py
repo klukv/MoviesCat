@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from ml_model.prototype.data.db_loaders import load_training_payload
+from ml_model.prototype.data.db_loaders import dataframes_from_payload, load_training_payload
 from ml_model.prototype.evaluation import compute_metrics
 from ml_model.prototype.model import train_als
 from ml_model.prototype.persistence import save_artifacts
@@ -32,22 +32,18 @@ def _sample_user_for_demo(active_users: pd.Index, user_enc: dict) -> str | int |
     return None
 
 
-def train_from_training_payload_file(
-    payload_path: str | Path,
+def train_from_dataframes(
+    movies_df: pd.DataFrame,
+    interactions_df: pd.DataFrame,
     artifacts_path: str | Path = "als_model_artifacts.pkl",
     metrics_k: int = 10,
     min_interactions_for_eval: int = 3,
     show_progress: bool = True,
 ) -> dict:
     """
-    Загружает JSON (movies + interactions), обучает ALS, сохраняет артефакты.
-
-    Возвращает словарь с ключом metrics (или metrics=None, если тест пустой).
+    Обучает ALS на готовых DataFrame каталога и взаимодействий, сохраняет артефакты.
     """
-    payload_path = Path(payload_path)
     artifacts_path = Path(artifacts_path)
-
-    movies_df, interactions_df = load_training_payload(payload_path)
 
     implicit_df = interactions_to_implicit(interactions_df)
     user_enc, item_enc, user_dec, item_dec = build_encoders(implicit_df)
@@ -123,3 +119,47 @@ def train_from_training_payload_file(
     )
 
     return {"metrics": metrics, "artifacts_path": str(artifacts_path.resolve())}
+
+
+def train_from_training_payload_file(
+    payload_path: str | Path,
+    artifacts_path: str | Path = "als_model_artifacts.pkl",
+    metrics_k: int = 10,
+    min_interactions_for_eval: int = 3,
+    show_progress: bool = True,
+) -> dict:
+    """
+    Загружает JSON (movies + interactions), обучает ALS, сохраняет артефакты.
+
+    Возвращает словарь с ключом metrics (или metrics=None, если тест пустой).
+    """
+    payload_path = Path(payload_path)
+    movies_df, interactions_df = load_training_payload(payload_path)
+    return train_from_dataframes(
+        movies_df,
+        interactions_df,
+        artifacts_path=artifacts_path,
+        metrics_k=metrics_k,
+        min_interactions_for_eval=min_interactions_for_eval,
+        show_progress=show_progress,
+    )
+
+
+def train_from_raw_lists(
+    movies_raw: list,
+    interactions_raw: list,
+    artifacts_path: str | Path = "als_model_artifacts.pkl",
+    metrics_k: int = 10,
+    min_interactions_for_eval: int = 3,
+    show_progress: bool = True,
+) -> dict:
+    """Обучение из сырых списков (например, после пагинированной выгрузки с бекенда)."""
+    movies_df, interactions_df = dataframes_from_payload(movies_raw, interactions_raw)
+    return train_from_dataframes(
+        movies_df,
+        interactions_df,
+        artifacts_path=artifacts_path,
+        metrics_k=metrics_k,
+        min_interactions_for_eval=min_interactions_for_eval,
+        show_progress=show_progress,
+    )

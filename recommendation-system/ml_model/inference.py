@@ -62,6 +62,12 @@ def _df_to_items(df: pd.DataFrame, score_col: str) -> list[RecommendationItem]:
 _ARTIFACTS_CACHE: dict[str, Any] | None = None
 
 
+def reload_artifacts_cache() -> None:
+    """Сбрасывает кэш после переобучения модели."""
+    global _ARTIFACTS_CACHE
+    _ARTIFACTS_CACHE = None
+
+
 def _load_artifacts_cached(path: Path) -> dict[str, Any]:
     global _ARTIFACTS_CACHE
     if _ARTIFACTS_CACHE is not None:

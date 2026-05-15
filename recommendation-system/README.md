@@ -29,6 +29,17 @@ uvicorn recommendation_system.app.main:app --host 0.0.0.0 --port 8000 --reload
 
 Swagger UI: `http://localhost:8000/docs`
 
+### Переменные окружения
+
+Скопируйте `.env.example` → `.env` в папке `recommendation-system/` и укажите логин/пароль пользователя бекенда:
+
+```
+REC_SERVICE_BACKEND_AUTH_USERNAME=...
+REC_SERVICE_BACKEND_AUTH_PASSWORD=...
+```
+
+Файл `.env` подхватывается автоматически при старте сервиса.
+
 ### Обучение модели (JSON как с бекенда)
 
 Формат файла: `movies` + `interactions` (см. `ml_model/prototype/data/db_loaders.py`).  
