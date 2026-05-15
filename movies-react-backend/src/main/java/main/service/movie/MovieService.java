@@ -9,10 +9,16 @@ import lombok.extern.slf4j.Slf4j;
 import main.client.RecommendationClient;
 import main.dto.MovieDTO;
 import main.dto.MovieScore;
+import main.dto.PageResponse;
 import main.dto.RecommendationResponse;
 import main.models.Movies;
 import main.repositories.MoviesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -42,6 +48,50 @@ public class MovieService {
 
     public Boolean isEmptyMovies() {
         return moviesRepository.count() == 0;
+    }
+
+    public PageResponse<Movies> getAllMovies(String[] sort, String genre, Integer page, Integer size) {
+        List<Sort.Order> orders = new ArrayList<Sort.Order>();
+
+        if (sort[0].contains(",")) {
+            for (String sortOrder : sort) {
+                String[] _sort = sortOrder.split(",");
+                orders.add(new Sort.Order(getSortDirection(_sort[1]), _sort[0]));
+            }
+        } else {
+            orders.add(new Sort.Order(getSortDirection(sort[1]), sort[0]));
+        }
+
+        Page<Movies> movies = moviesRepository.findAll(PageRequest.of(page, size, Sort.by(orders)));
+
+        PageResponse<Movies> pageableMovies = PageResponse.<Movies>builder()
+                .content(movies.getContent())
+                .page(movies.getNumber())
+                .size(movies.getSize())
+                .totalElements(movies.getTotalElements())
+                .totalPages(movies.getTotalPages())
+                .last(movies.isLast())
+                .build();
+
+        if (!genre.equals("default")) {
+            List<Movies> filteredMovies = pageableMovies.getContent().stream()
+                    .filter(movie -> Arrays.asList(movie.getGenre().replaceAll("\\s+","").split(",")).contains(genre))
+                    .collect(Collectors.toList());
+
+            pageableMovies.setContent(filteredMovies);
+        }
+
+        return pageableMovies;
+    }
+
+    private Sort.Direction getSortDirection(String direction) {
+        if (direction.equals("asc")) {
+            return Sort.Direction.ASC;
+        } else if (direction.equals("desc")) {
+            return Sort.Direction.DESC;
+        }
+
+        return Sort.Direction.ASC;
     }
 
     public List<MovieDTO> getRecommendedMovies(

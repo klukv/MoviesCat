@@ -2,15 +2,17 @@ package main.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import main.dto.MovieDTO;
-import main.models.Movies;
-import main.models.User;
 import main.dto.AddFavouriteRequest;
 import main.dto.MessageResponse;
+import main.dto.MovieDTO;
+import main.dto.PageResponse;
+import main.models.Movies;
+import main.models.User;
 import main.repositories.MoviesRepository;
 import main.repositories.UserRepository;
 import main.service.movie.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,16 +40,6 @@ public class MoviesControllers {
     UserRepository userRepository;
 
     private final MovieService movieService;
-
-    private Sort.Direction getSortDirection(String direction){
-        if(direction.equals("asc")){
-            return Sort.Direction.ASC;
-        }else if(direction.equals("desc")){
-            return Sort.Direction.DESC;
-        }
-
-        return Sort.Direction.ASC;
-    }
 
 
     @PostMapping("/movie")
@@ -124,35 +116,22 @@ public class MoviesControllers {
 
     @GetMapping("/movies")
     @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-    public ResponseEntity<List<Movies>> getAllSortedMovies(@RequestParam(defaultValue = "id,desc") String[] sort, @RequestParam(defaultValue = "default") String genre){
+    public ResponseEntity<PageResponse<Movies>> getAllSortedMovies(
+            @RequestParam(defaultValue = "id,desc") String[] sort,
+            @RequestParam(defaultValue = "default") String genre,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") @Max(100) Integer size
+    ) {
 
-        try{
-            List<Sort.Order> orders = new ArrayList<Sort.Order>();
+        try {
+            PageResponse<Movies> movies = movieService.getAllMovies(sort, genre, page, size);
 
-            if (sort[0].contains(",")) {
-                for (String sortOrder : sort) {
-                    String[] _sort = sortOrder.split(",");
-                    orders.add(new Sort.Order(getSortDirection(_sort[1]), _sort[0]));
-                }
-            } else {
-                orders.add(new Sort.Order(getSortDirection(sort[1]), sort[0]));
-            }
-            List<Movies> movies = moviesRepository.findAll(Sort.by(orders));
-
-            if(!genre.equals("default")){
-                List<Movies> filterMovies = movies.stream()
-                        .filter(movie -> Arrays.asList(movie.getGenre().replaceAll("\\s+","").split(",")).contains(genre))
-                        .collect(Collectors.toList());
-
-                return new ResponseEntity<>(filterMovies, HttpStatus.OK);
-            }
-
-            if (movies.isEmpty()) {
+            if (movies.getContent().isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
             return new ResponseEntity<>(movies, HttpStatus.OK);
-        }catch (Exception e){
+        } catch (Exception e){
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

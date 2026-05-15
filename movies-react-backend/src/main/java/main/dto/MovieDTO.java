@@ -19,3 +19,4 @@ public class MovieDTO {
     private String type;
     private Double score; // score из рекомендаций, обогащённый данными из БД
 }
+
